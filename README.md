@@ -8,15 +8,17 @@ Built by a supervised autonomous agent pipeline (nightshift).
 
 ## Run
 
-Use Python 3.11 or later. Install dependencies in an environment, then run the current scaffold:
+Use Python 3.11 or later. Install dependencies in an environment, then generate deterministic local data:
 
 ```powershell
 python -m pip install -e .
-python -m ledger_recon.cli
+ledger-recon generate --seed 42 --output tmp/data
 python -m unittest discover -s tests -v
 ```
 
-The `generate`, `reconcile`, and `report` workflow is planned; see [PLANS.md](PLANS.md) and [SPEC.md](SPEC.md).
+`generate` writes four CSV files (`sales`, `payments`, `invoices`, and `tax_ledger`) and a
+`discrepancies.json` manifest. The manifest documents four deliberate, synthetic differences;
+the reconciliation and report steps are planned next. See [PLANS.md](PLANS.md) and [SPEC.md](SPEC.md).
 
 ## Safety
 
