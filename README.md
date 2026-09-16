@@ -13,12 +13,14 @@ Use Python 3.11 or later. Install dependencies in an environment, then generate 
 ```powershell
 python -m pip install -e .
 ledger-recon generate --seed 42 --output tmp/data
+ledger-recon reconcile --input tmp/data --output tmp/findings.json
 python -m unittest discover -s tests -v
 ```
 
 `generate` writes four CSV files (`sales`, `payments`, `invoices`, and `tax_ledger`) and a
-`discrepancies.json` manifest. The manifest documents four deliberate, synthetic differences;
-the reconciliation and report steps are planned next. See [PLANS.md](PLANS.md) and [SPEC.md](SPEC.md).
+`discrepancies.json` manifest. The manifest documents four deliberate, synthetic differences.
+`reconcile` uses DuckDB fixed-point decimal comparisons to write JSON with transaction-level
+findings and ledger-total checks. See [PLANS.md](PLANS.md) and [SPEC.md](SPEC.md).
 
 ## Safety
 
