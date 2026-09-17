@@ -20,7 +20,9 @@ python -m unittest discover -s tests -v
 `generate` writes four CSV files (`sales`, `payments`, `invoices`, and `tax_ledger`) and a
 `discrepancies.json` manifest. The manifest documents four deliberate, synthetic differences.
 `reconcile` uses DuckDB fixed-point decimal comparisons to write JSON with transaction-level
-findings and ledger-total checks. See [PLANS.md](PLANS.md) and [SPEC.md](SPEC.md).
+findings and ledger-total checks. Each finding includes the classification, documented rule,
+plain-language rule description, and synthetic source-row identifiers needed to audit it. See
+[PLANS.md](PLANS.md) and [SPEC.md](SPEC.md).
 
 ## Safety
 

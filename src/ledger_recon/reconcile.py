@@ -15,6 +15,8 @@ CHECKS = (
     ("tax_ledger_to_sales", "tax_ledger", "tax_row_id", "tax_amount", "tax_amount"),
 )
 
+UNCLASSIFIED_RULE = "unclassified_reconciliation_difference"
+
 
 def _amount(value: Any) -> str | None:
     """Format DuckDB decimal values as auditable two-decimal strings."""
@@ -48,13 +50,60 @@ def _load_ledgers(connection: duckdb.DuckDBPyConnection, input_dir: Path) -> Non
         )
 
 
+def _source_row_ids(finding: dict[str, str | None]) -> list[str]:
+    """Return source identifiers present in a raw reconciliation finding."""
+    return [row_id for row_id in (finding["sale_row_id"], finding["ledger_row_id"]) if row_id is not None]
+
+
+def _load_explanations(input_dir: Path) -> dict[tuple[str, str], dict[str, Any]]:
+    """Index documented synthetic discrepancy rules by check and transaction."""
+    manifest_file = input_dir / "discrepancies.json"
+    if not manifest_file.is_file():
+        raise FileNotFoundError(f"Missing required discrepancy manifest: {manifest_file}")
+    manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+    discrepancies = manifest.get("discrepancies")
+    if not isinstance(discrepancies, list):
+        raise ValueError("The discrepancy manifest must contain a discrepancies list")
+    explanations: dict[tuple[str, str], dict[str, Any]] = {}
+    for discrepancy in discrepancies:
+        if not isinstance(discrepancy, dict):
+            raise ValueError("Each discrepancy manifest entry must be an object")
+        transaction_id = discrepancy.get("transaction_id")
+        check_id = discrepancy.get("check_id")
+        if not isinstance(transaction_id, str) or not isinstance(check_id, str):
+            raise ValueError("Each discrepancy manifest entry needs a check_id and transaction_id")
+        key = (check_id, transaction_id)
+        if key in explanations:
+            raise ValueError("Each discrepancy manifest entry needs a unique check_id and transaction_id")
+        explanations[key] = discrepancy
+    return explanations
+
+
+def _explain_finding(finding: dict[str, str | None], explanations: dict[tuple[str, str], dict[str, Any]]) -> dict[str, Any]:
+    """Attach documented provenance, or clearly mark an unexpected difference."""
+    source_row_ids = _source_row_ids(finding)
+    documented = explanations.get((finding["check_id"] or "", finding["transaction_id"] or ""))
+    if documented is None:
+        classification = "unclassified_missing_record" if finding["expected_amount"] is None or finding["observed_amount"] is None else "unclassified_amount_variance"
+        return {**finding, "classification": classification, "rule_id": UNCLASSIFIED_RULE, "rule_description": "No documented synthetic discrepancy rule matches this finding.", "source_row_ids": source_row_ids}
+    documented_row_ids = documented.get("source_row_ids")
+    if not isinstance(documented_row_ids, list) or not all(isinstance(row_id, str) for row_id in documented_row_ids):
+        raise ValueError(f"Discrepancy rule for {finding['transaction_id']} has invalid source_row_ids")
+    if not set(source_row_ids).issubset(documented_row_ids):
+        raise ValueError(f"Discrepancy rule for {finding['transaction_id']} does not preserve finding source rows")
+    for field in ("classification", "rule_id", "rule_description"):
+        if not isinstance(documented.get(field), str):
+            raise ValueError(f"Discrepancy rule for {finding['transaction_id']} is missing {field}")
+    return {**finding, "classification": documented["classification"], "rule_id": documented["rule_id"], "rule_description": documented["rule_description"], "source_row_ids": documented_row_ids}
+
+
 def reconcile_data(input_dir: Path) -> dict[str, Any]:
     """Return keyed and aggregate reconciliation results for generated local data."""
     input_dir = input_dir.resolve()
     connection = duckdb.connect(":memory:")
     try:
         _load_ledgers(connection, input_dir)
-        findings: list[dict[str, str | None]] = []
+        raw_findings: list[dict[str, str | None]] = []
         aggregates: list[dict[str, str]] = []
         for check_id, source_ledger, row_id_column, _, sales_amount_column in CHECKS:
             rows = connection.execute(
@@ -68,7 +117,7 @@ def reconcile_data(input_dir: Path) -> dict[str, Any]:
                     ORDER BY transaction_id"""
             ).fetchall()
             for transaction_id, sale_row_id, ledger_row_id, expected, observed, difference in rows:
-                findings.append(
+                raw_findings.append(
                     {
                         "check_id": check_id,
                         "transaction_id": transaction_id,
@@ -89,6 +138,8 @@ def reconcile_data(input_dir: Path) -> dict[str, Any]:
                     "difference_amount": _amount(expected_total - observed_total),
                 }
             )
+        explanations = _load_explanations(input_dir)
+        findings = [_explain_finding(finding, explanations) for finding in raw_findings]
         return {"currency": "SYN", "aggregate_checks": aggregates, "findings": findings}
     finally:
         connection.close()

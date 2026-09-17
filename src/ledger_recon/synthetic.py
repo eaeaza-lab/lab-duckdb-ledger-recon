@@ -51,10 +51,10 @@ def build_ledgers(seed: int, row_count: int = ROW_COUNT) -> dict[str, list[dict[
 def discrepancy_manifest(seed: int) -> dict[str, Any]:
     """Return deliberate differences that future reconciliation stages must explain."""
     return {"seed": seed, "currency": "SYN", "description": "Synthetic, intentional differences for local reconciliation exercises.", "discrepancies": [
-        {"rule_id": "payment_amount_variance", "source_row_ids": ["SALE-009", "PAY-009"], "transaction_id": "TXN-009", "difference_amount": "1.37"},
-        {"rule_id": "invoice_total_variance", "source_row_ids": ["SALE-006", "INV-006"], "transaction_id": "TXN-006", "difference_amount": "2.00"},
-        {"rule_id": "tax_amount_variance", "source_row_ids": ["SALE-011", "TAX-011"], "transaction_id": "TXN-011", "difference_amount": "0.50"},
-        {"rule_id": "missing_payment", "source_row_ids": ["SALE-012"], "transaction_id": "TXN-012", "difference_amount": None},
+        {"rule_id": "payment_amount_variance", "check_id": "payment_to_sales", "classification": "intentional_amount_variance", "rule_description": "The payment is intentionally 1.37 SYN below the synthetic sale gross amount.", "source_row_ids": ["SALE-009", "PAY-009"], "transaction_id": "TXN-009", "difference_amount": "1.37"},
+        {"rule_id": "invoice_total_variance", "check_id": "invoice_to_sales", "classification": "intentional_amount_variance", "rule_description": "The invoice is intentionally 2.00 SYN above the synthetic sale gross amount.", "source_row_ids": ["SALE-006", "INV-006"], "transaction_id": "TXN-006", "difference_amount": "2.00"},
+        {"rule_id": "tax_amount_variance", "check_id": "tax_ledger_to_sales", "classification": "intentional_amount_variance", "rule_description": "The tax-ledger amount is intentionally 0.50 SYN below the synthetic sale tax amount.", "source_row_ids": ["SALE-011", "TAX-011"], "transaction_id": "TXN-011", "difference_amount": "0.50"},
+        {"rule_id": "missing_payment", "check_id": "payment_to_sales", "classification": "intentional_missing_record", "rule_description": "The synthetic payment record is intentionally absent for this sale.", "source_row_ids": ["SALE-012"], "transaction_id": "TXN-012", "difference_amount": None},
     ]}
 
 

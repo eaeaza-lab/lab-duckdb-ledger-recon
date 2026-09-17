@@ -29,3 +29,5 @@ class SyntheticLedgerTest(unittest.TestCase):
             self.assertNotIn("TXN-012", {row["transaction_id"] for row in payments})
             self.assertEqual(len(manifest["discrepancies"]), 4)
             self.assertEqual(manifest["discrepancies"][0]["source_row_ids"], ["SALE-009", "PAY-009"])
+            self.assertEqual(manifest["discrepancies"][0]["check_id"], "payment_to_sales")
+            self.assertEqual(manifest["discrepancies"][0]["classification"], "intentional_amount_variance")

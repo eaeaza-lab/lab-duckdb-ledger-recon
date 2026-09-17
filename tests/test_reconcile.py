@@ -32,6 +32,16 @@ class ReconciliationTest(unittest.TestCase):
         self.assertEqual(result["findings"][1]["observed_amount"], None)
         self.assertEqual(result["findings"][0]["difference_amount"], "1.37")
         self.assertEqual(
+            [(finding["classification"], finding["rule_id"], finding["source_row_ids"]) for finding in result["findings"]],
+            [
+                ("intentional_amount_variance", "payment_amount_variance", ["SALE-009", "PAY-009"]),
+                ("intentional_missing_record", "missing_payment", ["SALE-012"]),
+                ("intentional_amount_variance", "invoice_total_variance", ["SALE-006", "INV-006"]),
+                ("intentional_amount_variance", "tax_amount_variance", ["SALE-011", "TAX-011"]),
+            ],
+        )
+        self.assertIn("synthetic payment record is intentionally absent", result["findings"][1]["rule_description"])
+        self.assertEqual(
             [(check["check_id"], check["difference_amount"]) for check in result["aggregate_checks"]][1:],
             [("invoice_to_sales", "-2.00"), ("tax_ledger_to_sales", "0.50")],
         )
