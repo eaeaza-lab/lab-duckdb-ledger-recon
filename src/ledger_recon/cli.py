@@ -5,6 +5,7 @@ from pathlib import Path
 
 from ledger_recon.synthetic import generate_data
 from ledger_recon.reconcile import reconcile_to_file
+from ledger_recon.report import render_report
 
 
 def main() -> None:
@@ -20,6 +21,9 @@ def main() -> None:
     reconcile_parser = subparsers.add_parser("reconcile", help="compare generated ledgers with DuckDB")
     reconcile_parser.add_argument("--input", type=Path, required=True, help="local directory containing generated CSV files")
     reconcile_parser.add_argument("--output", type=Path, required=True, help="local JSON findings file")
+    report_parser = subparsers.add_parser("report", help="render a standalone HTML audit report")
+    report_parser.add_argument("--findings", type=Path, required=True, help="local JSON findings file")
+    report_parser.add_argument("--output", type=Path, required=True, help="local HTML report file")
     args = parser.parse_args()
     if args.command == "generate":
         generate_data(args.output, args.seed)
@@ -27,6 +31,9 @@ def main() -> None:
     elif args.command == "reconcile":
         reconcile_to_file(args.input, args.output)
         print(f"Wrote reconciliation findings to {args.output}")
+    elif args.command == "report":
+        render_report(args.findings, args.output)
+        print(f"Wrote HTML audit report to {args.output}")
     else:
         parser.print_help()
 

@@ -14,6 +14,7 @@ Use Python 3.11 or later. Install dependencies in an environment, then generate 
 python -m pip install -e .
 ledger-recon generate --seed 42 --output tmp/data
 ledger-recon reconcile --input tmp/data --output tmp/findings.json
+ledger-recon report --findings tmp/findings.json --output tmp/reconciliation-report.html
 python -m unittest discover -s tests -v
 ```
 
@@ -22,7 +23,9 @@ python -m unittest discover -s tests -v
 `reconcile` uses DuckDB fixed-point decimal comparisons to write JSON with transaction-level
 findings and ledger-total checks. Each finding includes the classification, documented rule,
 plain-language rule description, and synthetic source-row identifiers needed to audit it. See
-[PLANS.md](PLANS.md) and [SPEC.md](SPEC.md).
+[PLANS.md](PLANS.md) and [SPEC.md](SPEC.md). `report` converts that portable findings JSON into
+a standalone HTML audit report with ledger totals, transaction findings, classifications, rules,
+and source-row provenance.
 
 ## Safety
 
