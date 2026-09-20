@@ -1,6 +1,6 @@
 # DuckDB Ledger Reconciliation Lab
 
-**Status: work in progress**
+**Status: MVP complete**
 
 A local learning and showcase CLI for generating synthetic sales, payment, invoice, and tax-ledger data; reconciling it in DuckDB; explaining mismatches; and exporting an auditable HTML report. It never needs network access at runtime.
 
@@ -8,7 +8,7 @@ Built by a supervised autonomous agent pipeline (nightshift).
 
 ## Run
 
-Use Python 3.11 or later. Install dependencies in an environment, then generate deterministic local data:
+Use Python 3.11 or later. Install dependencies in an environment, then run the complete offline workflow:
 
 ```powershell
 python -m pip install -e .
@@ -25,7 +25,13 @@ findings and ledger-total checks. Each finding includes the classification, docu
 plain-language rule description, and synthetic source-row identifiers needed to audit it. See
 [PLANS.md](PLANS.md) and [SPEC.md](SPEC.md). `report` converts that portable findings JSON into
 a standalone HTML audit report with ledger totals, transaction findings, classifications, rules,
-and source-row provenance.
+and source-row provenance. All commands validate the local input and output path type before
+writing files; use `ledger-recon --help` or `ledger-recon <command> --help` for option details.
+
+## Reproducibility
+
+Use the same integer `--seed` to regenerate identical synthetic source ledgers. The example
+above uses seed `42`; its files remain local under `tmp/` and can be removed when no longer needed.
 
 ## Safety
 

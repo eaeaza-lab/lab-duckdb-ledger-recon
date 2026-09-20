@@ -7,7 +7,7 @@
 - [x] **M2 DuckDB reconciliation** *(mvp)* — Load data into DuckDB and implement keyed and aggregate reconciliation findings. Acceptance: `ledger-recon reconcile --input tmp/data --output tmp/findings.json`
 - [x] **M3 mismatch explanations** *(mvp)* — Classify mismatches and preserve source-row identifiers plus the applicable rule. Acceptance: `python -m unittest discover -s tests -v`
 - [x] **M4 HTML audit report** *(mvp)* — Render a standalone Jinja2 report with totals, findings, and provenance. Acceptance: `ledger-recon report --findings tmp/findings.json --output tmp/reconciliation-report.html`
-- [ ] **M5 CLI workflow and docs** *(mvp)* — Complete Typer commands, validation, examples, and end-to-end offline test. Acceptance: `python -m unittest discover -s tests -v`
+- [x] **M5 CLI workflow and docs** *(mvp)* — Complete Typer commands, validation, examples, and end-to-end offline test. Acceptance: `python -m unittest discover -s tests -v`
 - [ ] **M6 polish** *(polish)* — Add terminal output, report styling, edge-case coverage, and reproducibility notes. Acceptance: `python -m unittest discover -s tests -v`
 
 ## Progress log
@@ -17,6 +17,7 @@
 - 2026-09-16 — M2 complete: added DuckDB fixed-point keyed comparisons and aggregate ledger-total findings, exposed through the local reconcile command.
 - 2026-09-17 — M3 complete: enriched each reconciliation finding with a documented classification, rule, explanation, and retained synthetic source-row identifiers.
 - 2026-09-19 — M4 complete: added a standalone Jinja2 HTML audit report with ledger totals, findings, classifications, rules, and source-row provenance.
+- 2026-09-21 — M5 complete: replaced the CLI scaffold with validated Typer workflow commands, documented the complete local workflow, and added an end-to-end CLI test.
 
 ## Decision log
 
@@ -28,3 +29,4 @@
 - 2026-09-17 — Treat the generated discrepancy manifest as the authoritative explanation catalogue; unexpected findings remain auditable under an explicit unclassified rule instead of being silently attributed to an intentional difference.
 - 2026-09-17 — Match documented explanations by both reconciliation check and transaction, preventing a rule for one ledger comparison from explaining a different discrepancy on the same transaction.
 - 2026-09-19 — Keep the report self-contained with inline styling and autoescaped Jinja2 values, so it remains portable and does not treat finding content as executable markup.
+- 2026-09-21 — Validate CLI path kinds before command execution while leaving output creation to the domain functions, which keeps errors clear without changing the existing local-write behavior.
