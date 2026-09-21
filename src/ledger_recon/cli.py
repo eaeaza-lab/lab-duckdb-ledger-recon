@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Annotated
 
@@ -47,14 +48,27 @@ def _output_file(_: object, __: object, value: Path) -> Path:
     return value
 
 
+def _csv_row_count(csv_file: Path) -> int:
+    """Count data rows in a generated CSV without retaining an open file handle."""
+    with csv_file.open(encoding="utf-8") as handle:
+        return sum(1 for _ in handle) - 1
+
+
 @app.command()
 def generate(
     seed: Annotated[int, typer.Option(help="Integer seed for reproducible synthetic data.")],
     output: Annotated[Path, typer.Option(help="Local directory for generated CSV and JSON files.", callback=_output_directory)],
 ) -> None:
     """Write deterministic, synthetic source ledgers and their rule manifest."""
-    generate_data(output, seed)
-    typer.echo(f"Generated synthetic ledgers in {output}")
+    data_dir = generate_data(output, seed)
+    ledger_counts = {
+        "sales": _csv_row_count(data_dir / "sales.csv"),
+        "payments": _csv_row_count(data_dir / "payments.csv"),
+        "invoices": _csv_row_count(data_dir / "invoices.csv"),
+        "tax-ledger": _csv_row_count(data_dir / "tax_ledger.csv"),
+    }
+    counts = ", ".join(f"{count} {name}" for name, count in ledger_counts.items())
+    typer.echo(f"Generated synthetic ledgers in {data_dir} ({counts}).")
 
 
 @app.command()
@@ -63,8 +77,13 @@ def reconcile(
     output: Annotated[Path, typer.Option(help="Local JSON findings file to write.", callback=_output_file)],
 ) -> None:
     """Compare generated ledgers and write auditable reconciliation findings."""
-    reconcile_to_file(input, output)
-    typer.echo(f"Wrote reconciliation findings to {output}")
+    output_file = reconcile_to_file(input, output)
+    result = json.loads(output_file.read_text(encoding="utf-8"))
+    aggregate_differences = sum(check["difference_amount"] != "0.00" for check in result["aggregate_checks"])
+    typer.echo(
+        f"Wrote reconciliation findings to {output_file} "
+        f"({len(result['findings'])} transaction finding(s); {aggregate_differences} aggregate difference(s))."
+    )
 
 
 @app.command()
@@ -73,8 +92,9 @@ def report(
     output: Annotated[Path, typer.Option(help="Local standalone HTML report to write.", callback=_output_file)],
 ) -> None:
     """Render reconciliation findings as a standalone local HTML audit report."""
-    render_report(findings, output)
-    typer.echo(f"Wrote HTML audit report to {output}")
+    output_file = render_report(findings, output)
+    result = json.loads(findings.read_text(encoding="utf-8"))
+    typer.echo(f"Wrote HTML audit report to {output_file} ({len(result['findings'])} transaction finding(s)).")
 
 
 def main() -> None:

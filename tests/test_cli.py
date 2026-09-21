@@ -30,8 +30,11 @@ class CliWorkflowTest(unittest.TestCase):
             self.assertEqual(help_result.exit_code, 0, help_result.output)
             self.assertIn("Generate, reconcile, and report", help_result.output)
             self.assertEqual(generate_result.exit_code, 0, generate_result.output)
+            self.assertIn("12 sales, 11 payments, 12 invoices, 12 tax-ledger", generate_result.output)
             self.assertEqual(reconcile_result.exit_code, 0, reconcile_result.output)
+            self.assertIn("4 transaction finding(s); 3 aggregate difference(s)", reconcile_result.output)
             self.assertEqual(report_result.exit_code, 0, report_result.output)
+            self.assertIn("4 transaction finding(s)", report_result.output)
             self.assertTrue(report_file.is_file())
             self.assertIn("Synthetic ledger reconciliation audit report", report_file.read_text(encoding="utf-8"))
 

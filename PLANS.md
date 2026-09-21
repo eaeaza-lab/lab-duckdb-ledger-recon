@@ -8,7 +8,7 @@
 - [x] **M3 mismatch explanations** *(mvp)* — Classify mismatches and preserve source-row identifiers plus the applicable rule. Acceptance: `python -m unittest discover -s tests -v`
 - [x] **M4 HTML audit report** *(mvp)* — Render a standalone Jinja2 report with totals, findings, and provenance. Acceptance: `ledger-recon report --findings tmp/findings.json --output tmp/reconciliation-report.html`
 - [x] **M5 CLI workflow and docs** *(mvp)* — Complete Typer commands, validation, examples, and end-to-end offline test. Acceptance: `python -m unittest discover -s tests -v`
-- [ ] **M6 polish** *(polish)* — Add terminal output, report styling, edge-case coverage, and reproducibility notes. Acceptance: `python -m unittest discover -s tests -v`
+- [x] **M6 polish** *(polish)* — Add terminal output, report styling, edge-case coverage, and reproducibility notes. Acceptance: `python -m unittest discover -s tests -v`
 
 ## Progress log
 
@@ -18,6 +18,7 @@
 - 2026-09-17 — M3 complete: enriched each reconciliation finding with a documented classification, rule, explanation, and retained synthetic source-row identifiers.
 - 2026-09-19 — M4 complete: added a standalone Jinja2 HTML audit report with ledger totals, findings, classifications, rules, and source-row provenance.
 - 2026-09-21 — M5 complete: replaced the CLI scaffold with validated Typer workflow commands, documented the complete local workflow, and added an end-to-end CLI test.
+- 2026-09-22 — M6 complete: added concise deterministic terminal summaries, a responsive standalone report summary and styling, empty-result coverage, and reproducibility guidance.
 
 ## Decision log
 
@@ -30,3 +31,4 @@
 - 2026-09-17 — Match documented explanations by both reconciliation check and transaction, preventing a rule for one ledger comparison from explaining a different discrepancy on the same transaction.
 - 2026-09-19 — Keep the report self-contained with inline styling and autoescaped Jinja2 values, so it remains portable and does not treat finding content as executable markup.
 - 2026-09-21 — Validate CLI path kinds before command execution while leaving output creation to the domain functions, which keeps errors clear without changing the existing local-write behavior.
+- 2026-09-22 — Keep report summary values derived at render time and omit timestamps, so presentation polish does not alter the portable findings artifact or compromise reproducibility.

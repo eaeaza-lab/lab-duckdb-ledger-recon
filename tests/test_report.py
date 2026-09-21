@@ -39,3 +39,16 @@ class ReportTest(unittest.TestCase):
 
         self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;", report)
         self.assertNotIn("<script>alert(1)</script>", report)
+
+    def test_report_renders_a_reconciled_empty_result(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            findings_file = root / "findings.json"
+            findings_file.write_text(
+                json.dumps({"currency": "SYN", "aggregate_checks": [], "findings": []}), encoding="utf-8"
+            )
+            report = render_report(findings_file, root / "report.html").read_text(encoding="utf-8")
+
+        self.assertIn("Reconciled", report)
+        self.assertIn("No aggregate checks were supplied.", report)
+        self.assertIn("No transaction findings were supplied.", report)
